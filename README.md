@@ -89,7 +89,9 @@ end
 At the end of this section, a large `dataStruct` is created in MATLAB containing all the loaded airfoil geometries and aerodynamic performance data.
 
 ---
-https://github.com/Nadeem999-M/Machine_Learning_Eppler_Series/blob/8fc23e58fb9cf3da42dda60df1150024a5f13dbc/images/image.png
+## Correlation Plot
+
+![Correlation Plot](images/Correlation_Plot.png)
 ---
 ## 📧 Contact
 Email: mn542052@gmail.com
