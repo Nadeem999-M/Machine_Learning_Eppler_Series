@@ -89,7 +89,8 @@ end
 At the end of this section, a large `dataStruct` is created in MATLAB containing all the loaded airfoil geometries and aerodynamic performance data.
 
 ---
-
+images/image.png
+---
 ## 📧 Contact
 Email: mn542052@gmail.com
 **Project Author:**  
