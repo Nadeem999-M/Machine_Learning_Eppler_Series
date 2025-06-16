@@ -361,6 +361,11 @@ popupPlot = uicontrol(f, 'Style', 'popupmenu', 'String', {'Cl vs Cd', 'Cl vs Alp
 % Plot Button executes the plotting based on user selection
 uicontrol(f, 'Style', 'pushbutton', 'String', 'Plot', 'Callback', @(~,~) plotSelected(dataStruct, popupAirfoil, popupPlot, ax));
 ```
+
+![GUI for plotting the existing database for visualization](images/Airfoil_Plotter_GUI.png)
+
+*Figure 7: GUI for plotting the existing database for visualization*
+
 **✅ Output of This Stage**
 
 - Fully cleaned dataset with additional Cl/Cd feature.
