@@ -88,6 +88,18 @@ end
 ✅ **Output of This Stage:**  
 At the end of this section, a large `dataStruct` is created in MATLAB containing all the loaded airfoil geometries and aerodynamic performance data.
 
+![Data Struct created in MATLAB for organization](images/DataStruct.png)
+
+*Figure 1: Data Struct created in MATLAB for organization*
+
+![Performance Data a.k.a Main_Dataset in MATLAB](images/Raw_Performance_Data_Extraction.png)
+
+*Figure 2: Performance Data a.k.a Main_Dataset in MATLAB*
+
+![Coordinates of the Goemetries extracted from the .dat files](images/Coordinate_Geometry.png)
+
+*Figure 3: Coordinates of the Goemetries extracted from the .dat files*
+
 ---
 ## 2️⃣ Data Cleaning and Preprocessing
 
