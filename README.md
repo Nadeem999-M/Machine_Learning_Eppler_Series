@@ -158,6 +158,9 @@ for idx = 1:length(dataStruct)
     end
 end
 ```
+![Unnecessary Row and Columns were removed from the Perfromance Data](images/Cleaned_Performance_Data.png)
+
+*Figure 4: Unnecessary Row and Columns were removed from the Perfromance Data*
 
 ### 3️⃣ Handle Missing Values
 
@@ -269,6 +272,9 @@ h.Title = 'Combined Correlation Matrix (Columns 1 to 8)';
 h.XLabel = 'Variables';
 h.YLabel = 'Variables';
 ```
+![Correlation Plot for the features from the Performance Data](images/Correlation_Plot.png)
+
+*Figure 5: Correlation Plot for the features from the Performance Data*
 
 ---
 
@@ -316,6 +322,10 @@ for idx = 1:length(dataStruct)
     end
 end
 ```
+![The ratio of Cl and Cd is being added in the last column for visualisation](images/Feature_Eng.png)
+
+*Figure 6: The ratio of Cl and Cd is being added in the last column for visualisation*
+
 2️⃣ GUI Plotting
 An interactive MATLAB GUI was created to visualize:
 - Cl vs Cd
