@@ -684,6 +684,109 @@ save('NN_Training_Data.mat', 'Predictor_Var', 'Response_Var');
     - Lift-to-Drag Ratio (ClCd)
 - The outputs (Response_Var) represent the flattened airfoil coordinate geometries used as ground truth for shape prediction.
 - Data saved into NN_Training_Data.mat ensures reproducibility and ease of use in later model training steps.
+---
+# Neural Network Airfoil Geometry Prediction
+
+This repository contains MATLAB code for training, predicting, and visualizing airfoil geometry using a neural network model based on aerodynamic parameters.
+
+---
+## 🔟 Model Training
+
+## Overview
+
+This project demonstrates a complete pipeline to:
+
+- Train a neural network to predict airfoil geometry coordinates from aerodynamic parameters.
+- Provide a reusable prediction function for inference.
+- Develop an interactive MATLAB GUI for user-friendly input, plotting, and exporting of predicted airfoil shapes.
+
+---
+
+## Files
+
+| Filename                     | Description                                             |
+| ---------------------------- | ------------------------------------------------------- |
+| `Model1_Levenberg_Algorithm.m` | Train a recurrent neural network using Levenberg-Marquardt algorithm |
+| `myNeuralNetworkFunction.m`  | Function to load the trained network and predict geometry |
+| `PredictAirfoilGUI.m`        | GUI to input parameters, plot predicted airfoil, and export data |
+
+---
+
+## 1. Training the Neural Network Model
+
+The core of this project is a Layered Recurrent Neural Network (RNN) trained to learn the relationship between aerodynamic inputs and airfoil geometry points.
+
+**Input parameters:**
+
+- Angle of attack (`Alpha`)
+- Lift coefficient (`Cl`)
+- Drag coefficient (`Cd`)
+- Profile drag coefficient (`Cdp`)
+
+**Output:**
+
+- X and Y coordinates of airfoil geometry (20 points each, concatenated into a 40-element vector)
+
+### Key Points:
+
+- Uses MATLAB's `layrecnet` with 30 hidden neurons.
+- Trained with Levenberg-Marquardt backpropagation (`trainlm`).
+- Data divided into 80% training, 10% validation, 10% test.
+- Trained network saved as `Net1` in `Trained_Net1.mat`.
+
+### Example code snippet from `Model1_Levenberg_Algorithm.m`:
+
+```matlab
+net = layrecnet(1:2, 30);
+net.trainFcn = 'trainlm';
+[net, tr] = train(net, X, Y, 'useParallel', 'yes');
+save('Trained_Net1.mat', 'net');
+```
+## 2. Prediction Function (myNeuralNetworkFunction.m)
+This function loads the trained neural network model and predicts airfoil coordinates given input parameters.
+
+Usage:
+```matlab
+% Prepare input as a cell array (1 timestep × 4 features)
+X = {[Alpha; Cl; Cd; Cdp]};
+
+% Predict airfoil coordinates
+predictedCoords = myNeuralNetworkFunction(X);
+```
+## Internal workflow:
+- Loads Trained_Net1.mat once using a persistent variable.
+- Runs a forward pass with the input to produce a 40-element output vector.
+- The first 20 values correspond to X coordinates, the next 20 to Y coordinates.
+
+## 3. User Interface: PredictAirfoilGUI
+A simple MATLAB GUI provides interactive access to the model:
+- Text input fields for Alpha, Cl, Cd, and Cdp.
+- Plot Geometry button calls the prediction function and plots the airfoil.
+- Export to Excel button saves the predicted coordinate points.
+
+Launch GUI
+```matlab
+PredictAirfoilGUI
+```
+
+## GUI Features:
+- Input validation and error handling.
+- Plots predicted airfoil shape with grid and equal axis scaling.
+- Exports coordinate data as an Excel file for further use.
+
+## Example Workflow
+1. Run Model1_Levenberg_Algorithm.m to train and save the neural network.
+2. Use PredictAirfoilGUI to open the GUI.
+3. Enter aerodynamic parameters (Alpha, Cl, Cd, Cdp).
+4. Click Plot Geometry to visualize the predicted airfoil.
+5. Optionally, click Export to Excel to save coordinate data.
+
+## Future Improvements
+- Increase resolution of geometry points.
+- Add more aerodynamic parameters or physical constraints.
+- Integrate uncertainty quantification.
+- Develop batch prediction for multiple inputs.
+- Enhance GUI with 3D visualization or comparison plots.
 
 ---
 ## 📧 Contact
