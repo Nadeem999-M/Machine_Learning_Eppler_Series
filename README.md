@@ -364,7 +364,7 @@ uicontrol(f, 'Style', 'pushbutton', 'String', 'Plot', 'Callback', @(~,~) plotSel
 
 ![GUI for plotting the existing database for visualization](images/Airfoil_Plotter_DropdownGUI.png)
 
-*Figure 7: GUI for plotting the existing database for visualization*
+*Figure 7: Dropdown Menu GUI for plotting the existing database for visualization*
 
 **✅ Output of This Stage**
 
