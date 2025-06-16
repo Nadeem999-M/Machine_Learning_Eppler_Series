@@ -829,7 +829,7 @@ PredictAirfoilGUI
 
 *Figure 14: Graphical User Interface for user input to predict or interpolate the shape of the airfoil according to the input parameters*
 
-![Predicted Geometry based on the user inputs](images/Predicted Airfoil Geometry.png)
+![Predicted Geometry based on the user inputs](images/PredictedAirfoilGeometry.png)
 
 *Figure 15: Predicted Geometry based on the user inputs*
 
