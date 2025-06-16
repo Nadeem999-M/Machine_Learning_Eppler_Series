@@ -687,9 +687,13 @@ save('NN_Training_Data.mat', 'Predictor_Var', 'Response_Var');
 
 ---
 ## 📧 Contact
-Email: mn542052@gmail.com
+Email: 
+- mn542052@gmail.com
+- acharivehl25@gmail.com
+
 **Project Author:**  
-Mohammed Nadeem
+- Mohammed Nadeem
+- Vehl Achari 
 
 ---
 
