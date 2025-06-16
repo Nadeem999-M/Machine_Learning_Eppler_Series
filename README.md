@@ -418,10 +418,272 @@ for i = 1:length(dataStruct)
     dataStruct(i).Main_Dataset.data = T;
 end
 ```
-✅ Output of This Stage
+## ✅ Output of This Stage
 
 - Each aerodynamic record now includes its corresponding geometry.
 - The dataset is now fully ready for ML preprocessing.
+---
+## 6️⃣ Coordinate Geometry Resampling
+
+In this stage, we standardized all airfoil geometries by resampling them to a **fixed number of coordinate points**.  
+This ensures that all geometry data have equal length, which is required for ML model training.
+
+---
+
+## 🎯 Objectives
+
+- Resample every airfoil coordinate geometry to the same number of points (e.g. `targetPoints = 50`).
+- Handle inconsistent geometry lengths across different airfoils.
+- Eliminate NaN or missing geometry values before interpolation.
+
+---
+
+## 📂 Process Summary
+
+### Why Resample?
+- Original coordinate files had inconsistent number of X, Y points.
+- Machine Learning models require same-sized feature vectors.
+- Arc-length parameterization was used to resample coordinates uniformly along the airfoil shape.
+
+---
+
+## ✅ Key Code Logic
+
+```matlab
+targetPoints = 50;  % Desired number of resampled x and y points
+
+for i = 1:numel(dataStruct)
+    T = dataStruct(i).Main_Dataset.data;
+
+    % Identify geometry columns
+    varNames = string(T.Properties.VariableNames);
+    xCols = varNames(startsWith(varNames, 'x'));
+    yCols = varNames(startsWith(varNames, 'y'));
+
+    if isempty(xCols) || isempty(yCols)
+        warning('Skipping entry %d: No geometry columns found.', i);
+        continue;
+    end
+
+    xVals = T{:, xCols};
+    yVals = T{:, yCols};
+
+    xNew_all = zeros(height(T), targetPoints);
+    yNew_all = zeros(height(T), targetPoints);
+
+    for r = 1:height(T)
+        x = xVals(r, :);
+        y = yVals(r, :);
+
+        valid = ~isnan(x) & ~isnan(y);
+        x = x(valid);
+        y = y(valid);
+
+        if length(x) < 2
+            warning('Row %d has insufficient geometry points. Skipping.', r);
+            continue;
+        end
+
+        s = [0, cumsum(sqrt(diff(x).^2 + diff(y).^2))];
+        s = s / max(s);
+
+        [sUnique, ia] = unique(s);
+        x = x(ia);
+        y = y(ia);
+
+        sNew = linspace(0, 1, targetPoints);
+        xNew = interp1(sUnique, x, sNew, 'linear', 'extrap');
+        yNew = interp1(sUnique, y, sNew, 'linear', 'extrap');
+
+        xNew_all(r, :) = xNew;
+        yNew_all(r, :) = yNew;
+    end
+
+    % Create column names
+    xNewNames = compose("x%03d", 1:targetPoints);
+    yNewNames = compose("y%03d", 1:targetPoints);
+
+    geomTable = array2table([xNew_all, yNew_all], 'VariableNames', [xNewNames, yNewNames]);
+
+    % Replace old geometry with resampled geometry
+    T(:, [xCols, yCols]) = [];
+    dataStruct(i).Main_Dataset.data = [T geomTable];
+end
+```
+## ✅ Output of This Stage
+
+- Now every airfoil geometry has exactly 50 x-coordinates and 50 y-coordinates.
+- Each record is now fully normalized and ready for final dataset assembly.
+---
+## 7️⃣ Combine All Struct Entries into One Table
+
+In this stage, we consolidate all cleaned and processed airfoil records into a single **master table** for machine learning.
+
+---
+
+## 🎯 Objectives
+
+- Convert individual airfoil structs into a single large table.
+- Add airfoil name and Reynolds number as columns.
+- Fully assemble one dataset for ML model input.
+
+---
+
+## 📂 Process Summary
+
+Each entry in `dataStruct` contains:
+
+- Cleaned performance data.
+- Added features (e.g. `Cl/Cd`).
+- Resampled airfoil geometry.
+
+We now combine all of these into one unified table `Training_Data_Table`.
+
+---
+
+## ✅ Key Code Logic
+
+```matlab
+% Initialize final table
+Training_Data_Table = table();
+
+% Loop through all entries
+for i = 1:numel(dataStruct)
+    entry = dataStruct(i);
+
+    % Skip if Main_Dataset is missing
+    if isempty(entry.Main_Dataset.data)
+        continue;
+    end
+
+    % Get the table
+    T = entry.Main_Dataset.data;
+
+    % Add identifier columns
+    T.Airfoil = repmat(string(entry.Airfoil), height(T), 1);
+    T.Re = repmat(entry.Reynolds, height(T), 1);
+
+    % Reorder columns: Airfoil | Re | ...
+    T = movevars(T, {'Airfoil', 'Re'}, 'Before', 1);
+
+    % Append to main table
+    Training_Data_Table = [Training_Data_Table; T];
+end
+```
+## ✅ Output of This Stage
+- A fully flattened dataset where:
+    - Each row = one performance case (airfoil + Reynolds + AoA).
+    - Geometry & performance combined.
+    - Airfoil name & Reynolds number included as features.
+- The dataset is now directly ready for machine learning model training.
+---
+## 8️⃣ Dimensionality Reduction with PCA
+After cleaning and combining the dataset, the next crucial step is to analyze the underlying structure of the data and reduce its dimensionality. Principal Component Analysis (PCA) is an effective statistical tool to identify the most important features, reduce noise, and visualize relationships.
+
+## 🎯 Goals for This Section:
+
+- Clean the dataset by removing invalid entries.
+- Remove constant (non-informative) variables.
+- Standardize features to zero mean and unit variance.
+- Compute principal components and analyze explained variance.
+- Visualize PCA results via Pareto charts and biplots.
+- Explore 3D PCA projections with variable loadings.
+
+## 🔧 Code Explanation
+```matlab
+% Remove rows with any NaN or Inf values (critical for PCA)
+allData = allData(all(all(isfinite(allData),2), 2), :);
+
+% Identify and remove constant columns (zero variance)
+variances = var(allData);
+constantCols = variances == 0;
+allData(:, constantCols) = [];
+varNamesCleaned = varNames(~constantCols);  % Update variable names accordingly
+
+% Standardize data: zero mean, unit variance
+allData_norm = zscore(allData);
+
+% Perform PCA on standardized data
+[coeff, score, latent, tsquared, explained] = pca(allData_norm);
+
+% Visualize variance explained by each principal component with Pareto chart
+figure;
+pareto(explained)
+xlabel('Principal Component')
+ylabel('Variance Explained (%)')
+title('PCA Pareto Chart')
+
+% Visualize loadings and scores with 2D biplot
+figure;
+biplot(coeff(:,1:2), 'Scores', score(:,1:2), 'VarLabels', varNamesCleaned)
+title('PCA Biplot')
+grid on
+
+% Display explained variance in command window
+disp('Explained Variance (%):')
+disp(explained)
+disp('Cumulative Explained Variance (%):')
+disp(cumsum(explained))
+
+% 3D PCA visualization of first three components with variable loadings
+figure
+scatter3(score(:,1), score(:,2), score(:,3), 10, 'filled', 'MarkerFaceColor',[1 0.5 0]) % Orange color
+xlabel('PC 1')
+ylabel('PC 2')
+zlabel('PC 3')
+title('3D PCA Biplot')
+grid on
+hold on
+
+% Plot variable loadings as arrows in 3D space
+scale = 3; % Adjust for visibility
+for i = 1:size(coeff,1)
+    quiver3(0, 0, 0, scale*coeff(i,1), scale*coeff(i,2), scale*coeff(i,3), ...
+        'LineWidth', 2, 'Color', 'b')
+    text(scale*coeff(i,1), scale*coeff(i,2), scale*coeff(i,3), varNamesCleaned{i}, ...
+        'FontSize', 12, 'Color', 'cyan')
+end
+hold off
+```
+## ✅ What We Achieved Here:
+
+- The dataset was preprocessed to be PCA-ready by cleaning and standardizing.
+- PCA revealed how much variance each principal component explains.
+- Visualizations such as the Pareto chart and biplots help interpret the main features and their relationships.
+- The 3D biplot further assists in understanding the complex interactions between variables in reduced dimensions.
+---
+## Extracting Predictors and Responses for Neural Network Training
+## 9️⃣ Preparing Data for Model Training
+Before training the neural network, it is essential to separate the dataset into predictors (input features) and responses (output targets). In this project, the predictors include key aerodynamic performance parameters, while the responses are the flattened airfoil coordinate geometries.
+
+## 🎯 Goals for This Section:
+- Extract relevant predictor variables from the combined dataset.
+- Extract the flattened airfoil geometry coordinates as response variables.
+- Save the prepared data for later use in training machine learning models.
+
+## 🔧 Code Explanation
+```matlab
+Copy
+Edit
+% Extract predictor variables: aerodynamic parameters
+Predictor_Var = Training_Data_Table{:, {'Alpha', 'Cl', 'Cd', 'Cdp', 'ClCd'}};
+
+% Extract response variables: flattened geometry coordinates starting from 12th column
+geometryVarNames = Training_Data_Table.Properties.VariableNames(12:end);
+Response_Var = Training_Data_Table{:, geometryVarNames};
+
+% Save predictors and responses into a .mat file for reuse
+save('NN_Training_Data.mat', 'Predictor_Var', 'Response_Var');
+```
+## ✅ What We Achieved Here:
+- The model inputs (Predictor_Var) now contain aerodynamic performance parameters:
+    - Angle of Attack (Alpha)
+    - Lift Coefficient (Cl)
+    - Drag Coefficient (Cd)
+    - Profile Drag Coefficient (Cdp)
+    - Lift-to-Drag Ratio (ClCd)
+- The outputs (Response_Var) represent the flattened airfoil coordinate geometries used as ground truth for shape prediction.
+- Data saved into NN_Training_Data.mat ensures reproducibility and ease of use in later model training steps.
 
 ---
 ## 📧 Contact
