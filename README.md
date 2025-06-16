@@ -477,7 +477,7 @@ This ensures that all geometry data have equal length, which is required for ML 
 ## ✅ Key Code Logic
 
 ```matlab
-targetPoints = 50;  % Desired number of resampled x and y points
+targetPoints = 20;  % Desired number of resampled x and y points
 
 for i = 1:numel(dataStruct)
     T = dataStruct(i).Main_Dataset.data;
@@ -539,7 +539,7 @@ end
 ```
 ## ✅ Output of This Stage
 
-- Now every airfoil geometry has exactly 50 x-coordinates and 50 y-coordinates.
+- Now every airfoil geometry has exactly 20 x-coordinates and 20 y-coordinates.
 - Each record is now fully normalized and ready for final dataset assembly.
 ---
 ## 7️⃣ Combine All Struct Entries into One Table
@@ -672,6 +672,18 @@ for i = 1:size(coeff,1)
 end
 hold off
 ```
+![Pareto Chart for Explained PCA](images/PCA_Pareto_Chart.png)
+
+*Figure 8: Pareto Chart for Explained PCA*
+
+![BiPlot Graph for PCA](images/PCA_BiPlot.png)
+
+*Figure 9: BiPlot Graph for PCA*
+
+![3D BiPlot Graph for PCA](images/PCA_3DBiPlot.png)
+
+*Figure 10: 3D BiPlot Graph for PCA*
+
 ## ✅ What We Achieved Here:
 
 - The dataset was preprocessed to be PCA-ready by cleaning and standardizing.
@@ -756,19 +768,31 @@ The core of this project is a Layered Recurrent Neural Network (RNN) trained to 
 
 ### Key Points:
 
-- Uses MATLAB's `layrecnet` with 30 hidden neurons.
+- Uses MATLAB's `layrecnet` with 2 hidden neurons.
 - Trained with Levenberg-Marquardt backpropagation (`trainlm`).
 - Data divided into 80% training, 10% validation, 10% test.
-- Trained network saved as `Net1` in `Trained_Net1.mat`.
+- Trained network saved as `Net` in `Neural_Network_Model1.mat`.
 
 ### Example code snippet from `Model1_Levenberg_Algorithm.m`:
 
 ```matlab
-net = layrecnet(1:2, 30);
+net = layrecnet(1:2, 2);
 net.trainFcn = 'trainlm';
 [net, tr] = train(net, X, Y, 'useParallel', 'yes');
 save('Trained_Net1.mat', 'net');
 ```
+![Histogram Error graph of the trained model1](images/Histogram_Plot.png)
+
+*Figure 11: Histogram Error graph of the trained model1*
+
+![Iteration Performance graph of the trained model1](images/Performance_Plot.png)
+
+*Figure 12: Iteration Performance graph of the trained model1*
+
+![Training State Plot of the trained model1](images/Training_State_Plot.png)
+
+*Figure 13: Training State Plot of the trained model1*
+
 ## 2. Prediction Function (myNeuralNetworkFunction.m)
 This function loads the trained neural network model and predicts airfoil coordinates given input parameters.
 
@@ -800,6 +824,14 @@ PredictAirfoilGUI
 - Input validation and error handling.
 - Plots predicted airfoil shape with grid and equal axis scaling.
 - Exports coordinate data as an Excel file for further use.
+
+![GUI for user input](images/PredictAirfoilGUI.png)
+
+*Figure 14: Graphical User Interface for user input to predict or interpolate the shape of the airfoil according to the input parameters*
+
+![Predicted Geometry based on the user inputs](images/Predicted Airfoil Geometry.png)
+
+*Figure 15: Predicted Geometry based on the user inputs*
 
 ## Example Workflow
 1. Run Model1_Levenberg_Algorithm.m to train and save the neural network.
